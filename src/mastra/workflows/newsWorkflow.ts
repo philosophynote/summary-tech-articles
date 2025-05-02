@@ -82,7 +82,11 @@ const processItemsStep = new Step({
       triggerSchema: z.object({ item: itemSchema }),
     });
     dynamicWorkflow
-      .step(fetchPageStep)
+      .step(fetchPageStep, {
+        variables: {
+          item: { step: 'trigger', path: 'item' },
+        },
+      })
       .then(summarizationStep, {
         variables: {
           prompt: { step: fetchPageStep, path: 'content' },
@@ -112,4 +116,11 @@ export const newsWorkflow = new Workflow({
   name: 'news-workflow',
   triggerSchema: z.object({ query: z.string() }),
 });
-newsWorkflow.step(fetchRssStep).then(processItemsStep).commit(); 
+newsWorkflow
+  .step(fetchRssStep)
+  .then(processItemsStep, {
+    variables: {
+      items: { step: fetchRssStep, path: 'items' },
+    }
+  })
+  .commit(); 
