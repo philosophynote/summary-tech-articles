@@ -19,15 +19,38 @@ const fetchRssStep = new Step({
   execute: async ({ context }) => {
     const parser = new Parser();
     const feed = await parser.parseURL('https://ai-news.dev/feeds/');
-    const query = context.triggerData.query.toLowerCase();
     const items = (feed.items || [])
       .map(item => ({ title: item.title || '', link: item.link || '' }))
-      .filter(i =>
-        i.title.toLowerCase().includes(query) ||
-        i.link.toLowerCase().includes(query)
-      )
-      .slice(0, 3);
-    return { items };
+      .filter(i => i.title && i.link);
+
+    // OpenAI埋め込みモデル
+    const embeddingModel = openai.embedding('text-embedding-3-small');
+
+    // タイトルの埋め込みを一括生成
+    const titleTexts = items.map(i => i.title);
+    const titleEmbeddingRes = await embeddingModel.doEmbed({ values: titleTexts });
+    const titleEmbeddings = titleEmbeddingRes.embeddings;
+
+    // クエリの埋め込み
+    const queryEmbeddingRes = await embeddingModel.doEmbed({ values: [context.triggerData.query] });
+    const queryEmbedding = queryEmbeddingRes.embeddings[0];
+
+    // コサイン類似度計算関数
+    function cosineSimilarity(a: number[], b: number[]): number {
+      const dot = a.reduce((sum, v, i) => sum + v * b[i], 0);
+      const normA = Math.sqrt(a.reduce((sum, v) => sum + v * v, 0));
+      const normB = Math.sqrt(b.reduce((sum, v) => sum + v * v, 0));
+      return dot / (normA * normB);
+    }
+
+    // 類似度でソート
+    const itemsWithScore = items.map((item, idx) => ({
+      ...item,
+      score: cosineSimilarity(titleEmbeddings[idx], queryEmbedding),
+    }));
+    itemsWithScore.sort((a, b) => b.score - a.score);
+    const topItems = itemsWithScore.slice(0, 3).map(({ score, ...rest }) => rest);
+    return { items: topItems };
   },
 });
 
