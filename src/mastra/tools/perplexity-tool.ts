@@ -1,7 +1,7 @@
 import { MCPClient } from '@mastra/mcp'
 
-export const webMcp = new MCPClient({
-  id: 'web-mcp',
+export const perplexityTool = new MCPClient({
+  id: 'perplexity-tool',
   servers: {
     perplexityAsk: {
       command: 'npx',
@@ -12,10 +12,6 @@ export const webMcp = new MCPClient({
       env: {
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY || '',
       },
-    },
-    playwright: {
-      command: 'npx',
-      args: ['-y', '@playwright/mcp@latest'],
     },
   },
   timeout: 30000
