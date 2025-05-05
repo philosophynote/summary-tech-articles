@@ -5,6 +5,7 @@ import { load } from 'cheerio';
 import { Agent } from '@mastra/core/agent';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import { perplexityAgent } from '../agents/perplexityAgent';
 
 // 記事アイテムのスキーマ
 const itemSchema = z.object({
@@ -134,6 +135,9 @@ const processItemsStep = new Step({
   },
 });
 
+// Perplexity検索用のStep
+const perplexityStep = perplexityAgent.toStep();
+
 // メインのニュースワークフロー
 export const newsWorkflow = new Workflow({
   name: 'news-workflow',
@@ -144,6 +148,11 @@ newsWorkflow
   .then(processItemsStep, {
     variables: {
       items: { step: fetchRssStep, path: 'items' },
-    }
+    },
+  })
+  .step(perplexityStep, {
+    variables: {
+      prompt: { step: 'trigger', path: 'query' },
+    },
   })
   .commit(); 

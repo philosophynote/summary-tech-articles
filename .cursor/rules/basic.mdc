@@ -41,9 +41,11 @@ alwaysApply: false
  - 型定義を実施して取得データのバリデーションも行います
  - Mastraによるワークフロー
   - RSSを取得し、入力内容に関連するタイトルとURLを3件取得
-   - RSSは`https://ai-news.dev/feeds/`
-  - URLの情報元にアクセスし,本文を取得
-  - 本文を要約する   
+    - RSSは`https://ai-news.dev/feeds/`
+   - URLの情報元にアクセスし,本文を取得
+   - 本文を要約する
+  - PerplexityによりWEB検索を実施して結果を表示
+     
 
 
 ## 実装時の注意点

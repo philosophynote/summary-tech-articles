@@ -9,12 +9,17 @@ export async function POST(req: Request) {
     // ワークフロー実行
     const runResult = await start({ triggerData: { query } });
     // processItemsステップの結果を抽出
-    const stepRes = runResult.results['processItems'];
+    const processItemsRes = runResult.results['processItems'];
+    const perplexityRes = runResult.results['Perplexity Agent'];
     let items: Array<{ title: string; link: string; summary: string }> = [];
-    if (stepRes?.status === 'success') {
-      items = stepRes.output.results;
+    let perplexityResult = '';
+    if (processItemsRes?.status === 'success') {
+      items = processItemsRes.output.results;
     }
-    return NextResponse.json({ results: items });
+    if (perplexityRes?.status === 'success') {
+      perplexityResult = perplexityRes.output.text;
+    }
+    return NextResponse.json({ results: items, perplexity: perplexityResult });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
